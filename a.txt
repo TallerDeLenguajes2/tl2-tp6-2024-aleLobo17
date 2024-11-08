@@ -1,0 +1,1 @@
+con dotnet watch ejecuto en vez de dotnet run asi se va modificando la pagina mientras vamos modificando el archivo(es mejor para los detalles no para el paso a paso)
