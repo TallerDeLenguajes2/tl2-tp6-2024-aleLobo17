@@ -5,53 +5,51 @@ using presupuestos;
 using presupuestosDetalle;
 using productos;
 using productoReposotory;
+using clientes;
+using iPresupuestosRepository;
 
 namespace presupuestoRepository
 {
-    public class PresupuestosRepository
+    public class PresupuestosRepository: IPresupuestosRepository
     {
         private string CadenaDeConexion = "Data Source=db/Tienda.db;Cache=Shared";
 
-        public void CrearPresupuestos(Presupuestos presupuesto)
+        public void CrearPresupuesto(Presupuestos presupuesto)
+    {
+        string query1 = @"INSERT INTO Presupuestos (FechaCreacion, ClienteId) VALUES (@fechaPre, @idC)";
+        using (SqliteConnection connection = new SqliteConnection(CadenaDeConexion))
         {
-            ProductosRepository repoProductos = new ProductosRepository();
+            connection.Open();
 
-
-
-            string query = @"INSERT INTO Presupuestos (NombreDestinatario, FechaCreacion) 
-        VALUES (@destinatario, @fecha)";
-
-            string query2 = @"INSERT INTO PresupuestosDetalle (idPresupuesto, idProducto, Cantidad) 
-        VALUES (@idP, @idPr, @cant)";
-
-            string query3 = @"SELECT MAX(idPresupuesto) AS idMax FROM Presupuestos;";
-            using (SqliteConnection connection = new SqliteConnection(CadenaDeConexion))
+            // Inserta el presupuesto
+            using (SqliteCommand command = new SqliteCommand(query1, connection))
             {
-                connection.Open();
-                SqliteCommand command = new SqliteCommand(query, connection);
-
-                command.Parameters.AddWithValue("@destinatario", presupuesto.NombreDestinatario);
-                command.Parameters.AddWithValue("@fecha", presupuesto.FechaCreacion);
+                command.Parameters.Add(new SqliteParameter("@fechaPre", presupuesto.FechaCreacion));
+                command.Parameters.Add(new SqliteParameter("@idC", presupuesto.Clientes.ClienteId));
                 command.ExecuteNonQuery();
-                SqliteCommand command3 = new SqliteCommand(query3, connection);
-                using (SqliteDataReader reader = command3.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        foreach (var detalle in presupuesto.Detalle)
-                        {
-                            SqliteCommand command2 = new SqliteCommand(query2, connection);
-                            command2.Parameters.AddWithValue("@idP", Convert.ToInt32(reader["idMax"]));
-                            command2.Parameters.AddWithValue("@idPr", detalle.Producto.IdProducto);
-                            command2.Parameters.AddWithValue("@cant", detalle.Cantidad);
-                            command2.ExecuteNonQuery();
-                        }
-                    }
-                }
-                connection.Close();
             }
 
+            // Obtiene el último ID generado por la conexión
+            string queryGetId = "SELECT last_insert_rowid()";
+            using (SqliteCommand getIdCommand = new SqliteCommand(queryGetId, connection))
+            {
+                presupuesto.IdPresupuesto = Convert.ToInt32(getIdCommand.ExecuteScalar());
+            }
+
+            // Inserta los detalles usando el mismo ID y conexión
+            foreach (var item in presupuesto.Detalle)
+            {
+                string query2 = @"INSERT INTO PresupuestosDetalle (idPresupuesto, idProducto, Cantidad) VALUES (@idPre, @idProdu, @canti)";
+                using (SqliteCommand command = new SqliteCommand(query2, connection))
+                {
+                    command.Parameters.Add(new SqliteParameter("@idPre", presupuesto.IdPresupuesto));
+                    command.Parameters.Add(new SqliteParameter("@idProdu", item.Producto.IdProducto));
+                    command.Parameters.Add(new SqliteParameter("@canti", item.Cantidad));
+                    command.ExecuteNonQuery();
+                }
+            }
         }
+    }
 
         public List<Presupuestos> ObtenerPresupuestos()
         {
@@ -61,14 +59,15 @@ namespace presupuestoRepository
 
             using (SqliteConnection connection = new SqliteConnection(CadenaDeConexion))
             {
-                var query = "SELECT * FROM Presupuestos";
+                var query = "SELECT * FROM Presupuestos INNER JOIN Clientes USING (ClienteId)"; //traigo las dos tablas unidas
                 connection.Open();
                 var command = new SqliteCommand(query, connection);
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        Presupuestos newProd = new Presupuestos(Convert.ToInt32(reader["idPresupuesto"]), Convert.ToString(reader["NombreDestinatario"]) ?? "No tiene Nombre destinatario", Convert.ToString(reader["FechaCreacion"]), detalle);
+                        var newCliente = new Clientes(Convert.ToInt32(reader["ClienteId"]), Convert.ToString(reader["Nombre"]), Convert.ToString(reader["Email"]), Convert.ToString(reader["Telefono"]));
+                        Presupuestos newProd = new Presupuestos(Convert.ToInt32(reader["idPresupuesto"]), newCliente, Convert.ToString(reader["FechaCreacion"]), detalle);
                         listaPresupuestos.Add(newProd);
                     }
                     connection.Close();
@@ -122,11 +121,12 @@ namespace presupuestoRepository
             List<PresupuestoDetalle> listaDetalles = new List<PresupuestoDetalle>();
 
             var query = @"
-                SELECT P.idPresupuesto, P.NombreDestinatario, P.FechaCreacion, 
-                PD.idProducto, PD.Cantidad, PR.Descripcion, PR.Precio
+                SELECT P.idPresupuesto, P.ClienteId, P.FechaCreacion, 
+                PD.idProducto, PD.Cantidad, PR.Descripcion, PR.Precio, CL.Nombre, CL.Email, CL.Telefono
                 FROM Presupuestos P
                 LEFT JOIN PresupuestosDetalle PD ON P.idPresupuesto = PD.IdPresupuesto
                 LEFT JOIN Productos PR ON PD.idProducto = PR.idProducto
+                INNER JOIN Clientes CL using (ClienteId)
                 WHERE P.idPresupuesto = @idPresupuesto";
 
             using (SqliteConnection connection = new SqliteConnection(CadenaDeConexion))
@@ -141,10 +141,11 @@ namespace presupuestoRepository
                     {
                         if (presupuesto == null)
                         {
+                            var newCliente = new Clientes(Convert.ToInt32(reader["ClienteId"]), Convert.ToString(reader["Nombre"]), Convert.ToString(reader["Email"]), Convert.ToString(reader["Telefono"]));
                             // Crear el objeto Presupuestos solo la primera vez
                             presupuesto = new Presupuestos(
                                 Convert.ToInt32(reader["idPresupuesto"]),
-                                Convert.ToString(reader["NombreDestinatario"]) ?? "No tiene destinatario",
+                                newCliente,
                                 Convert.ToString(reader["FechaCreacion"]),
                                 listaDetalles
                             );
@@ -216,13 +217,13 @@ namespace presupuestoRepository
 
                     // Actualiza el presupuesto en la tabla Presupuestos
                     string query = @"UPDATE Presupuestos 
-                                SET NombreDestinatario = @destinatario, FechaCreacion = @fecha
+                                SET FechaCreacion = @fecha, idCliente = @idCl
                                 WHERE idPresupuesto = @id";
 
                     using (var command = new SqliteCommand(query, connection, transaction))
                     {
-                        command.Parameters.AddWithValue("@destinatario", presupuesto.NombreDestinatario);
                         command.Parameters.AddWithValue("@fecha", presupuesto.FechaCreacion);
+                        command.Parameters.AddWithValue("@idcl", presupuesto.Clientes.ClienteId);
                         command.Parameters.AddWithValue("@id", presupuesto.IdPresupuesto);
                     }
 
@@ -256,8 +257,11 @@ namespace presupuestoRepository
 
         string query = @"SELECT 
             P.idPresupuesto,
-            P.NombreDestinatario,
             P.FechaCreacion,
+            C.ClienteId,
+            C.Nombre,
+            C.Email,
+            C.Telefono,
             PR.idProducto,
             PR.Descripcion AS Producto,
             PR.Precio,
@@ -265,11 +269,13 @@ namespace presupuestoRepository
         FROM 
             Presupuestos P
         JOIN 
-            PresupuestosDetalle PD ON P.idPresupuesto = PD.idPresupuesto
+            Clientes C USING (ClienteId)
         JOIN 
             Productos PR ON PD.idProducto = PR.idProducto
+        JOIN 
+            PresupuestosDetalle PD ON P.idPresupuesto = PD.idPresupuesto
         WHERE 
-            P.idPresupuesto = @id;";
+            P.idPresupuesto = @id";
 
         using (SqliteConnection connection = new SqliteConnection(CadenaDeConexion))
         {
@@ -283,7 +289,8 @@ namespace presupuestoRepository
                 {
                     if (cont == 1)
                     {
-                        presupuesto = new Presupuestos(Convert.ToInt32(reader["idPresupuesto"]), reader["NombreDestinatario"].ToString(), Convert.ToString(reader["FechaCreacion"]));
+                        var newCliente = new Clientes(Convert.ToInt32(reader["ClienteId"]), Convert.ToString(reader["Nombre"]), Convert.ToString(reader["Email"]), Convert.ToString(reader["Telefono"]));
+                        presupuesto = new Presupuestos(Convert.ToInt32(reader["idPresupuesto"]), newCliente, Convert.ToString(reader["FechaCreacion"]));
                     }
                     Productos producto = new Productos(Convert.ToInt32(reader["idProducto"]), reader["Producto"].ToString(), Convert.ToInt32(reader["Precio"]));
                     PresupuestoDetalle detalle = new PresupuestoDetalle(producto, Convert.ToInt32(reader["Cantidad"]));
@@ -294,7 +301,7 @@ namespace presupuestoRepository
             connection.Close();
         }
         return presupuesto;
-    }
+    }   
 
     }
 
