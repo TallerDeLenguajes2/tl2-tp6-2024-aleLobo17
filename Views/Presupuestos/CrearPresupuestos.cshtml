@@ -1,50 +1,62 @@
 @using presupuestos;
 @model Presupuestos;
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Producto</title>
-    <!-- Incluyendo CSS de Bootstrap -->
+    <title>Crear Presupuesto</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
 </head>
 <body>
-
 <div class="container mt-5">
-    <h2>Crear Nuevo Producto</h2>
+    <h2>Crear Nuevo Presupuesto</h2>
     <form asp-action="CrearPresupuestos" method="post">
-    <div class="form-group">
-        <label asp-for="IdPresupuesto">ID del Presupuesto</label>
-        <input asp-for="IdPresupuesto" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label asp-for="NombreDestinatario">Nombre del Destinatario</label>
-        <input asp-for="NombreDestinatario" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label asp-for="FechaCreacion">Fecha de Creacion del Presupuesto</label>
-        <input asp-for="FechaCreacion" class="form-control" type="string" required />
-    </div>
-    <div class="form-group">
-        <label>Id del Producto</label>
-        <input name="Detalle[0].Producto.IdProducto" class="form-control" type="string" required />
-    </div>
-    <div class="form-group">
-        <label>Cantidad de Productos</label>
-        <input name="Detalle[0].Cantidad" class="form-control" type="number" required />
-    </div>
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">Crear Presupuesto</button>
-        <a asp-action="ListarPresupuestos" class="btn btn-secondary">Cancelar</a>
-    </div>
+        <div class="form-group">
+            <label for="FechaCreacion">Fecha de Creación del Presupuesto</label>
+            <input asp-for="FechaCreacion" class="form-control" type="date" required />
+        </div>
 
-</form>
+        <div class="form-group">
+            <label for="ClienteId">Seleccione Cliente</label>
+            <select asp-for="Clientes.ClienteId" class="form-control" required>
+                <option value="">Seleccione un cliente</option>
+                @foreach (var cliente in ViewBag.Clientes)
+                {
+                    <option value="@cliente.ClienteId">@cliente.NombreCliente</option>
+                }
+            </select>
+        </div>
+
+        <!-- Lista de productos y cantidades -->
+        <div id="producto-container">
+            <div class="form-group">
+                <label for="ProductoId">Seleccione Producto</label>
+                <select name="Detalle[0].Producto.IdProducto" class="form-control" required>
+                    <option value="">Seleccione un producto</option>
+                    @foreach (var producto in ViewBag.Productos)
+                    {
+                        <option value="@producto.IdProducto">@producto.Descripcion</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Cantidad">Cantidad de Producto</label>
+                <input name="Detalle[0].Cantidad" class="form-control" type="number" required />
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Crear Presupuesto</button>
+            <a asp-action="ListarPresupuestos" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
 </div>
 
-<!-- Incluyendo JavaScript de Bootstrap y dependencias para validación -->
+
+
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
