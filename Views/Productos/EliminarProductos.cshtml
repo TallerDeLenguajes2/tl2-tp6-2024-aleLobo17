@@ -1,0 +1,54 @@
+@using productos;
+@model Productos;
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar Producto</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h2>Confirmar Eliminación de Producto</h2>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <strong>Atención:</strong> Esta acción es irreversible. ¿Está seguro que desea eliminar el siguiente producto?
+            </div>
+            
+            <table class="table table-bordered mt-3">
+                <tbody>
+                    <tr>
+                        <th scope="row">ID del Producto</th>
+                        <td>@Model.IdProducto</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Descripción</th>
+                        <td>@Model.Descripcion</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Precio</th>
+                        <td>@Model.Precio.ToString("C")</td> <!-- Formato de precio en moneda -->
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <form asp-controller="Productos" asp-action="EliminarProductosConfirmarEliminacion" method="post">
+                <input type="hidden" name="id" value="@Model.IdProducto" />
+                <button type="submit" class="btn btn-danger">Confirmar Eliminación</button>
+            </form>
+            <a asp-action="ListarProductos" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </div>
+</div>
+
+<!-- Incluyendo JavaScript de Bootstrap y dependencias para validación -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
