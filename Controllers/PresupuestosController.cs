@@ -1,15 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using presupuestoRepository;
 using presupuestos;
+using clienteRepository;
+using productoReposotory;
 
 namespace presupuestoController
-    {
+{
     public class PresupuestosController : Controller
     {
         private readonly PresupuestosRepository _presupuestoRepository;
+        private readonly ClientesRepository _clientesRepository;
+        private readonly ProductosRepository _productosRepository;
+
         public PresupuestosController()
         {
             _presupuestoRepository = new PresupuestosRepository();
+            _clientesRepository = new ClientesRepository(); // Inicializamos el repositorio de 
+            _productosRepository = new ProductosRepository();
         }
 
         [HttpGet]
@@ -27,40 +34,55 @@ namespace presupuestoController
         [HttpGet]
         public IActionResult CrearPresupuestos()
         {
+            // Cargar la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            ViewBag.Productos = _productosRepository.ObtenerProductos();
             return View();
         }
+
         [HttpPost]
         public IActionResult CrearPresupuestos(Presupuestos presupuesto)
         {
             if (ModelState.IsValid) // Verifica si el modelo es válido
             {
-                _presupuestoRepository.CrearPresupuestos(presupuesto); // Guarda el producto en el repositorio
-                return RedirectToAction(nameof(ListarPresupuestos)); // Redirige a la lista de productos
+                _presupuestoRepository.CrearPresupuesto(presupuesto); // Guarda el presupuesto en el repositorio
+                return RedirectToAction(nameof(ListarPresupuestos)); // Redirige a la lista de presupuestos
             }
-            return View(presupuesto); // Si hay errores, vuelve a la vista del formulario con el modelo
+
+            // Si hay errores, recarga la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            ViewBag.Productos = _productosRepository.ObtenerProductos();
+            return View(presupuesto);
         }
 
         [HttpGet]
-    public IActionResult ModificarPresupuestos(int id)
-    {
-        var presupuesto = _presupuestoRepository.ObtenerPresupuestoPorId(id);
-        if (presupuesto == null)
+        public IActionResult ModificarPresupuestos(int id)
         {
-            return NotFound();
+            var presupuesto = _presupuestoRepository.ObtenerPresupuestoPorId(id);
+            if (presupuesto == null)
+            {
+                return NotFound();
+            }
+
+            // Cargar la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            ViewBag.Productos = _productosRepository.ObtenerProductos();
+            return View(presupuesto);
         }
-        return View(presupuesto);
-    }
 
         [HttpPost]
-        public IActionResult ModificarPresupuestos(Presupuestos presupuestos)
+        public IActionResult ModificarPresupuestos(Presupuestos presupuesto)
         {
             if (ModelState.IsValid)
             {
-                _presupuestoRepository.ModificarPresupuestoQ(presupuestos);
+                _presupuestoRepository.ModificarPresupuestoQ(presupuesto);
                 return RedirectToAction(nameof(ListarPresupuestos));
             }
-            return View(presupuestos);
-        } 
+
+            // Si hay errores, recarga la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            return View(presupuesto);
+        }
 
         [HttpGet]
         public IActionResult EliminarPresupuestos(int id)
@@ -79,6 +101,5 @@ namespace presupuestoController
             _presupuestoRepository.EliminarPresupuestoPorId(id);
             return RedirectToAction(nameof(ListarPresupuestos));
         }
-
     }
 }

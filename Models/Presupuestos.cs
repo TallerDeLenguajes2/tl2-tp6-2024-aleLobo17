@@ -1,6 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Routing.Constraints;
 using presupuestosDetalle;
+using clientes;
 
 namespace presupuestos
 {
@@ -8,27 +9,28 @@ namespace presupuestos
     public class Presupuestos
     {
         private int idPresupuesto;
-        private string nombreDestinatario;
+        private Clientes clientes;
         private List<PresupuestoDetalle> detalle;
         private string fechaCreacion;
 
         public int IdPresupuesto { get => idPresupuesto; set => idPresupuesto = value; }
-        public string NombreDestinatario { get => nombreDestinatario; set => nombreDestinatario = value; }
+        
         public List<PresupuestoDetalle> Detalle { get => detalle; set => detalle = value; }
         public string FechaCreacion { get => fechaCreacion; set => fechaCreacion = value; }
+        public Clientes Clientes { get => clientes; set => clientes = value; }
 
         public Presupuestos() { }
-        public Presupuestos(int idPresupuesto, string nombreDestinatario, string fechaCreacion, List<PresupuestoDetalle> detalle)
+        public Presupuestos(int idPresupuesto, Clientes cliente, string fechaCreacion, List<PresupuestoDetalle> detalle)
     {
         this.idPresupuesto = idPresupuesto;
-        this.nombreDestinatario = nombreDestinatario;
+        this.clientes = cliente;
         this.fechaCreacion = fechaCreacion;
         this.detalle = detalle;
     }
-    public Presupuestos(int idPresupuesto, string nombreDestinatario, string fechaCreacion)
+    public Presupuestos(int idPresupuesto, Clientes cliente, string fechaCreacion)
     {
         this.idPresupuesto = idPresupuesto;
-        this.nombreDestinatario = nombreDestinatario;
+        this.clientes = cliente;
         this.fechaCreacion = fechaCreacion;
         detalle = new List<PresupuestoDetalle>();
     }

@@ -1,0 +1,46 @@
+@using clientes;
+@model Clientes;
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Producto</title>
+    <!-- Incluyendo CSS de Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Crear Nuevo Cliente</h2>
+    <form asp-action="CrearCliente" method="post">
+    <div class="form-group">
+        <label asp-for="@Model.ClienteId">ID del Cliente</label>
+        <input asp-for="@Model.ClienteId" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="@Model.NombreCliente">Nombre del Cliente</label>
+        <input asp-for="@Model.NombreCliente" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="@Model.EmailCliente">Email del Cliente</label>
+        <input asp-for="@Model.EmailCliente" class="form-control" type="string" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="@Model.TelefonoCliente">Telefono del Cliente</label>
+        <input asp-for="@Model.TelefonoCliente" class="form-control" type="string" required />
+    </div>
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Crear Cliente</button>
+        <a asp-action="ListarClientes" class="btn btn-secondary">Cancelar</a>
+    </div>
+
+</form>
+</div>
+
+<!-- Incluyendo JavaScript de Bootstrap y dependencias para validación -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -39,7 +39,7 @@
                 {
                     <tr>
                         <th scope="row">@item.IdPresupuesto</th>
-                        <td>@item.NombreDestinatario</td>
+                        <td>@item.Clientes.NombreCliente</td>
                         <td>@item.FechaCreacion</td>
                         <td><a class="btn btn-primary text-white" asp-area="" asp-controller="Presupuestos"
                         asp-action="ListarDetallesPresupuestos" method="get" asp-route-id="@item.IdPresupuesto">Detalles</a>

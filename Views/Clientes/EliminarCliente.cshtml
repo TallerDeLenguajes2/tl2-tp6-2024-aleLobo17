@@ -1,12 +1,12 @@
-@using presupuestos;
-@model Presupuestos;
+@using clientes;
+@model Clientes;
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eliminar Producto</title>
+    <title>Eliminar Cliente</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
 </head>
 <body>
@@ -14,36 +14,40 @@
 <div class="container mt-5">
     <div class="card border-danger">
         <div class="card-header bg-danger text-white">
-            <h2>Confirmar Eliminación de Producto</h2>
+            <h2>Confirmar Eliminación de Cliente</h2>
         </div>
         <div class="card-body">
             <div class="alert alert-warning">
-                <strong>Atención:</strong> Esta acción es irreversible. ¿Está seguro que desea eliminar el siguiente producto?
+                <strong>Atención:</strong> Esta acción es irreversible. ¿Está seguro que desea eliminar el siguiente Cliente?
             </div>
             
             <table class="table table-bordered mt-3">
                 <tbody>
                     <tr>
-                        <th scope="row">ID del Producto</th>
-                        <td>@Model.IdPresupuesto</td>
+                        <th scope="row">ID del Cliente</th>
+                        <td>@Model.ClienteId</td>
                     </tr>
                     <tr>
                         <th scope="row">Descripción</th>
-                        <td>@Model.Clientes.NombreCliente</td>
+                        <td>@Model.NombreCliente</td>
                     </tr>
                     <tr>
                         <th scope="row">Precio</th>
-                        <td>@Model.FechaCreacion</td>
+                        <td>@Model.EmailCliente</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Precio</th>
+                        <td>@Model.TelefonoCliente</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         <div class="card-footer d-flex justify-content-between">
-            <form asp-controller="Presupuestos" asp-action="EliminarPresupuestosConfirmarEliminacion" method="post">
-                <input type="hidden" name="id" value="@Model.IdPresupuesto" />
+            <form asp-controller="Clientes" asp-action="EliminarClienteConfirmado" method="post">
+                <input type="hidden" name="id" value="@Model.ClienteId" />
                 <button type="submit" class="btn btn-danger">Confirmar Eliminación</button>
             </form>
-            <a asp-action="ListarPresupuestos" class="btn btn-secondary">Cancelar</a>
+            <a asp-action="ObtenerClientes" class="btn btn-secondary">Cancelar</a>
         </div>
     </div>
 </div>
