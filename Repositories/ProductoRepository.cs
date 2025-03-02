@@ -1,10 +1,11 @@
 using System;
+using iProductosRepository;
 using Microsoft.Data.Sqlite;
 using productos;
 
 namespace productoReposotory
 {
-    public class ProductosRepository
+    public class ProductosRepository: IProductosRepository
     {
         private string CadenaDeConexion = "Data Source=db/Tienda.db;Cache=Shared";
 

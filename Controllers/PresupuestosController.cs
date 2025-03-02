@@ -1,15 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using presupuestoRepository;
 using presupuestos;
+using clienteRepository;
+using productoReposotory;
+using iPresupuestosRepository;
+using iClientesRepository;
+using iProductosRepository;
 
 namespace presupuestoController
-    {
+{
     public class PresupuestosController : Controller
     {
-        private readonly PresupuestosRepository _presupuestoRepository;
-        public PresupuestosController()
+        private readonly ILogger<PresupuestosController> _logger;
+        private readonly IPresupuestosRepository _presupuestoRepository;
+        private readonly IClientesRepository _clientesRepository;
+        private readonly IProductosRepository _productosRepository;
+
+        public PresupuestosController(ILogger<PresupuestosController> logger, IPresupuestosRepository presupuestosRepository, IProductosRepository productosRepository, IClientesRepository clientesRepository)
         {
-            _presupuestoRepository = new PresupuestosRepository();
+            _logger = logger;
+            _presupuestoRepository = presupuestosRepository;
+            _clientesRepository = clientesRepository; // Inicializamos el repositorio de 
+            _productosRepository = productosRepository;
         }
 
         [HttpGet]
@@ -21,50 +33,86 @@ namespace presupuestoController
         [HttpGet]
         public IActionResult ListarDetallesPresupuestos(int id)
         {
-            return View(_presupuestoRepository.ObtenerDetalle(id));
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("User"))) return RedirectToAction("Index", "Login");
+            var listaDetalle = _presupuestoRepository.ObtenerDetalle(id);
+            return View(listaDetalle);
         }
 
         [HttpGet]
         public IActionResult CrearPresupuestos()
         {
+            // Cargar la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            ViewBag.Productos = _productosRepository.ObtenerProductos();
             return View();
         }
+
         [HttpPost]
         public IActionResult CrearPresupuestos(Presupuestos presupuesto)
         {
-            if (ModelState.IsValid) // Verifica si el modelo es válido
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("User"))) return RedirectToAction("Index", "Login");
+            if (HttpContext.Session.GetString("Rol") != "Admin")
             {
-                _presupuestoRepository.CrearPresupuestos(presupuesto); // Guarda el producto en el repositorio
-                return RedirectToAction(nameof(ListarPresupuestos)); // Redirige a la lista de productos
+                TempData["ErrorMessage"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("ListarPresupuestos");
             }
-            return View(presupuesto); // Si hay errores, vuelve a la vista del formulario con el modelo
+
+            // Si hay errores, recarga la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            ViewBag.Productos = _productosRepository.ObtenerProductos();
+            return View(presupuesto);
         }
 
         [HttpGet]
-    public IActionResult ModificarPresupuestos(int id)
-    {
-        var presupuesto = _presupuestoRepository.ObtenerPresupuestoPorId(id);
-        if (presupuesto == null)
+        public IActionResult ModificarPresupuestos(int id)
         {
-            return NotFound();
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("User"))) return RedirectToAction ("Index", "Login");
+            if (HttpContext.Session.GetString("Rol") != "Admin")
+            {
+                TempData["ErrorMessage"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("ListarPresupuestos");
+            }
+            var presupuesto = _presupuestoRepository.ObtenerPresupuestoPorId(id);
+            if (presupuesto == null)
+            {
+                return NotFound();
+            }
+
+            // Cargar la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            ViewBag.Productos = _productosRepository.ObtenerProductos();
+            return View(presupuesto);
         }
-        return View(presupuesto);
-    }
 
         [HttpPost]
-        public IActionResult ModificarPresupuestos(Presupuestos presupuestos)
+        public IActionResult ModificarPresupuestos(Presupuestos presupuesto)
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("User"))) return RedirectToAction ("Index", "Login");
+            if (HttpContext.Session.GetString("Rol") != "Admin")
+            {
+                TempData["ErrorMessage"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("ListarPresupuestos");
+            }
             if (ModelState.IsValid)
             {
-                _presupuestoRepository.ModificarPresupuestoQ(presupuestos);
+                _presupuestoRepository.ModificarPresupuestoQ(presupuesto);
                 return RedirectToAction(nameof(ListarPresupuestos));
             }
-            return View(presupuestos);
-        } 
+
+            // Si hay errores, recarga la lista de clientes
+            ViewBag.Clientes = _clientesRepository.ObtenerClientes();
+            return View(presupuesto);
+        }
 
         [HttpGet]
         public IActionResult EliminarPresupuestos(int id)
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("User"))) return RedirectToAction ("Index", "Login");
+            if (HttpContext.Session.GetString("Rol") != "Admin")
+            {
+                TempData["ErrorMessage"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("ListarPresupuestos");
+            }
             var presupuesto = _presupuestoRepository.ObtenerPresupuestoConDetalles(id);
             if (presupuesto == null)
             {
@@ -76,9 +124,14 @@ namespace presupuestoController
         [HttpPost]
         public IActionResult EliminarPresupuestosConfirmarEliminacion(int id)
         {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("User"))) return RedirectToAction ("Index", "Login");
+            if (HttpContext.Session.GetString("Rol") != "Admin")
+            {
+                TempData["ErrorMessage"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("ListarPresupuestos");
+            }
             _presupuestoRepository.EliminarPresupuestoPorId(id);
             return RedirectToAction(nameof(ListarPresupuestos));
         }
-
     }
 }
